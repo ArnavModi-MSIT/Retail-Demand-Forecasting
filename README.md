@@ -322,6 +322,3 @@ This solution demonstrates how machine learning can be used to:
 
 B.Tech Information Technology  
 Maharaja Surajmal Institute of Technology
-
-LinkedIn: Add Your LinkedIn Link  
-Portfolio: Add Your Portfolio Link
