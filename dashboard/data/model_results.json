@@ -1,0 +1,26 @@
+[
+    {
+        "Model":"XGBoost",
+        "MAE":52.7595,
+        "RMSE":89.3986,
+        "MAPE":13.9455
+    },
+    {
+        "Model":"LightGBM",
+        "MAE":53.954,
+        "RMSE":89.9896,
+        "MAPE":14.1573
+    },
+    {
+        "Model":"RandomForest",
+        "MAE":56.9706,
+        "RMSE":97.7225,
+        "MAPE":14.5868
+    },
+    {
+        "Model":"Naive_7Day",
+        "MAE":85.4808,
+        "RMSE":156.7626,
+        "MAPE":19.9313
+    }
+]

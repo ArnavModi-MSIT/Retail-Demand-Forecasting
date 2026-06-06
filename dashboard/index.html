@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retail Demand Forecasting Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="#header">Overview</a>
+      <a href="#forecast">Forecast</a>
+      <a href="#models">Models</a>
+      <a href="#shap">Explainability</a>
+      <a href="#inventory">Inventory</a>
+    </div>
+    <div class="nav-right">
+      <a href="https://github.com" target="_blank" class="nav-link">GitHub</a>
+      <a href="https://www.kaggle.com/competitions/m5-forecasting-accuracy" target="_blank" class="nav-link">Dataset</a>
+    </div>
+  </nav>
+
+  <div class="wrapper">
+
+    <!-- HEADER -->
+    <header id="header" class="anim">
+      <div class="header-left">
+        <div class="eyebrow">Retail Analytics · ML Dashboard</div>
+        <h1>Demand <span>Forecast</span> Intelligence</h1>
+        <p class="subtitle">XGBoost · SHAP Explainability · Inventory Optimization</p>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-cyan">XGBoost</span>
+        <span class="badge badge-purple">SHAP</span>
+        <span class="badge badge-orange">28-Day</span>
+      </div>
+    </header>
+
+    <!-- PROJECT SUMMARY -->
+    <section class="project-summary anim anim-1">
+      <h3>Project Overview</h3>
+      <p>
+        Retail demand forecasting system built using XGBoost, LightGBM and Random Forest on 135,000+ aggregated retail sales records. Features include lag variables, rolling statistics, calendar effects, event indicators and pricing signals. Forecasts are converted into inventory recommendations and explained using SHAP feature attribution.
+      </p>
+    </section>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid anim anim-2">
+      <div class="kpi-card cyan">
+        <div class="kpi-label">Total Forecast Demand</div>
+        <div class="kpi-value cyan" id="totalForecast">—</div>
+        <div class="kpi-sub">units across all stores</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">Average Daily Forecast</div>
+        <div class="kpi-value purple" id="avgForecast">—</div>
+        <div class="kpi-sub">per store-dept combo</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">High Risk Inventory</div>
+        <div class="kpi-value red" id="highRisk">—</div>
+        <div class="kpi-sub">combos need review</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Best Model RMSE</div>
+        <div class="kpi-value green">89.40</div>
+        <div class="kpi-sub">XGBoost · lowest error</div>
+      </div>
+    </div>
+
+    <!-- BUSINESS INSIGHTS -->
+    <div class="section-head anim anim-3">
+      <h2>Business Insights</h2>
+      <div class="line"></div>
+      <span class="tag">4 KEY FINDINGS</span>
+    </div>
+    <div class="insight-grid anim anim-4">
+      <div class="insight-card">
+        <div class="insight-marker cyan">
+          <svg fill="none" stroke="#06b6d4" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="insight-title">Demand Forecast</div>
+        <div class="insight-body">Forecasted demand exceeds 1.3M units for the next planning cycle across all stores.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-marker red">
+          <svg fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        </div>
+        <div class="insight-title">Inventory Risk</div>
+        <div class="insight-body">1,204 store-department combinations flagged for immediate inventory review.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-marker green">
+          <svg fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <div class="insight-title">Best Model</div>
+        <div class="insight-body">XGBoost achieved RMSE 89.40 and MAPE 13.95% — best among all tested models.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-marker purple">
+          <svg fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        </div>
+        <div class="insight-title">Key Drivers</div>
+        <div class="insight-body">Rolling 7-day average + lag features account for 54% combined importance.</div>
+      </div>
+    </div>
+
+    <!-- ML PIPELINE -->
+    <div class="pipeline-section anim anim-5">
+      <div class="section-head">
+        <h2>ML Pipeline</h2>
+        <div class="line"></div>
+        <span class="tag">6 STAGES</span>
+      </div>
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="pipeline-dot"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg></div>
+          <div class="pipeline-label">Raw Sales Data</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-step">
+          <div class="pipeline-dot"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+          <div class="pipeline-label">Feature Engineering</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-step">
+          <div class="pipeline-dot"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="pipeline-label">XGBoost Training</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-step">
+          <div class="pipeline-dot"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="pipeline-label">Forecast Generation</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-step">
+          <div class="pipeline-dot"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
+          <div class="pipeline-label">SHAP Explainability</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-step">
+          <div class="pipeline-dot"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <div class="pipeline-label">Inventory Optimization</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TECH STACK -->
+    <section class="tech-stack anim anim-5">
+      <div class="stack-item">Python</div>
+      <div class="stack-item">XGBoost</div>
+      <div class="stack-item">LightGBM</div>
+      <div class="stack-item">SHAP</div>
+      <div class="stack-item">Pandas</div>
+      <div class="stack-item">Chart.js</div>
+    </section>
+
+    <!-- DATASET STATS -->
+    <section class="dataset-stats anim anim-5">
+      <div class="stat-card">
+        <h3>135K+</h3>
+        <p>Records</p>
+      </div>
+      <div class="stat-card">
+        <h3>31</h3>
+        <p>Features</p>
+      </div>
+      <div class="stat-card">
+        <h3>70</h3>
+        <p>Series</p>
+      </div>
+      <div class="stat-card">
+        <h3>1941</h3>
+        <p>Days</p>
+      </div>
+    </section>
+
+    <!-- FORECAST + RISK -->
+    <div id="forecast" class="section-head anim anim-6">
+      <h2>Forecast &amp; Risk Analysis</h2>
+      <div class="line"></div>
+      <span class="tag">DEMAND TRENDS</span>
+    </div>
+    <div class="chart-grid-3">
+      <div class="card">
+        <div class="card-title">28-Day Forecast Trend</div>
+        <div class="card-sub">Aggregated daily demand across all stores</div>
+        <div class="chart-wrap"><canvas id="forecastChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Inventory Risk Distribution</div>
+        <div class="card-sub">Store-department breakdown</div>
+        <div class="chart-wrap"><canvas id="inventoryChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- MODEL PERFORMANCE -->
+    <div id="models" class="section-head anim anim-6">
+      <h2>Model Performance</h2>
+      <div class="line"></div>
+      <span class="tag">BENCHMARKS</span>
+    </div>
+    <div class="chart-grid-2">
+      <div class="card">
+        <div class="card-title">Model Comparison</div>
+        <div class="card-sub">RMSE · MAE · MAPE across all models</div>
+        <div id="modelTableWrap"></div>
+        <div class="chart-wrap" style="height:220px;margin-top:20px;"><canvas id="modelChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Feature Importance</div>
+        <div class="card-sub">XGBoost gain-based · top 10</div>
+        <div class="chart-wrap" style="height:320px;"><canvas id="featureChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- PROJECT DETAILS -->
+    <section class="project-details anim anim-5">
+      <div class="section-head">
+        <h2>Project Details</h2>
+        <div class="line"></div>
+        <span class="tag">MODEL SUMMARY</span>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card green">
+          <div class="kpi-label">Best Model</div>
+          <div class="kpi-value green">XGBoost</div>
+        </div>
+        <div class="kpi-card cyan">
+          <div class="kpi-label">RMSE</div>
+          <div class="kpi-value cyan">89.40</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-label">MAPE</div>
+          <div class="kpi-value purple">13.95%</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-label">Forecast Horizon</div>
+          <div class="kpi-value red">28D</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHAP EXPLAINABILITY -->
+    <div id="shap" class="section-head anim anim-6">
+      <h2>SHAP Explainability</h2>
+      <div class="line"></div>
+      <span class="tag">FEATURE ATTRIBUTION</span>
+    </div>
+    <div class="shap-grid">
+      <div class="card">
+        <div class="card-title">SHAP Summary Plot</div>
+        <div class="card-sub">Generated from XGBoost predictions</div>
+        <div class="shap-img-wrap" style="margin-top:16px;">
+          <img src="assets/shap_summary.png" alt="SHAP Summary Plot" />
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Mean |SHAP| Values</div>
+        <div class="card-sub">Top 10 features by average impact</div>
+        <div class="shap-list" id="shapList" style="margin-top:18px;"></div>
+        <p style="margin-top:18px; font-size:13px; color:#6b7280; line-height:1.65;">
+          Recent sales history (rolling means + lags) contributes most strongly to predictions, confirming strong autocorrelation in retail demand.
+        </p>
+      </div>
+    </div>
+
+    <!-- INVENTORY RECOMMENDATIONS -->
+    <div id="inventory" class="table-section anim anim-6">
+      <div class="section-head">
+        <h2>Inventory Recommendations</h2>
+        <div class="line"></div>
+        <span class="tag">ALL RISK LEVELS</span>
+      </div>
+      <div class="table-controls">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="High">High Risk</button>
+        <button class="filter-btn" data-filter="Medium">Medium Risk</button>
+        <button class="filter-btn" data-filter="Low">Low Risk</button>
+      </div>
+      <div class="inv-table-wrap">
+        <table id="inventoryTable">
+          <thead>
+            <tr>
+              <th>Store</th>
+              <th>Department</th>
+              <th>Date</th>
+              <th>Forecast Sales</th>
+              <th>Safety Stock</th>
+              <th>Rec. Inventory</th>
+              <th>Risk Level</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /wrapper -->
+
+  <!-- FOOTER -->
+  <footer>
+    <p><strong>Retail Demand Forecasting Dashboard</strong></p>
+    <p>Python • XGBoost • SHAP • Chart.js</p>
+    <p style="margin-top:8px; color:#9ca3af; font-size:12px;">Built by Arnav Modi</p>
+  </footer>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
