@@ -1,7 +1,5 @@
 # Retail Demand Forecasting & Inventory Optimization
 
-Live Dashboard: https://arnavmodi-msit.github.io/Retail-Demand-Forecasting/
-
 ## Overview
 
 This project develops an end-to-end Retail Demand Forecasting system using Machine Learning and Time-Series Feature Engineering. Historical sales patterns are transformed into demand forecasts, inventory recommendations, and business insights through an interactive analytics dashboard.
