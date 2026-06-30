@@ -16,6 +16,29 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+import streamlit as st
+
+st.set_page_config(
+    page_title="Retail Demand Forecasting",
+    page_icon="📦",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ── Custom CSS — reduces Streamlit's oversized default scale ─────────────────
+st.markdown("""
+<style>
+    .block-container { padding-top: 2rem; padding-bottom: 2rem; max-width: 1200px; }
+    h1 { font-size: 1.9rem !important; }
+    h2, h3 { font-size: 1.3rem !important; }
+    [data-testid="stMetricValue"] { font-size: 1.6rem !important; }
+    [data-testid="stMetricLabel"] { font-size: 0.85rem !important; }
+    [data-testid="stSidebar"] h1 { font-size: 1.4rem !important; }
+    .stMarkdown p { font-size: 0.95rem; }
+    button[data-baseweb="tab"] { font-size: 0.95rem !important; }
+</style>
+""", unsafe_allow_html=True)
+
 # ── Session state ─────────────────────────────────────────────────────────────
 
 for key in ["results", "stage"]:
