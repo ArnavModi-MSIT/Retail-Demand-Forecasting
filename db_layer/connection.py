@@ -2,10 +2,16 @@
 Database connection layer.
 
 Reads connection settings from environment variables so the exact same code
-works against local Docker Postgres and AWS RDS — only the .env changes.
+works against local Docker Postgres, AWS RDS, and Neon — only the source of
+config changes between environments:
 
-Required environment variables (see .env.example):
-    DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+    - Local dev:           .env file (via python-dotenv) → os.environ
+    - Streamlit Cloud:      st.secrets (TOML, set in the dashboard)
+    - AWS / general prod:   real environment variables (e.g. from EC2's
+                             environment or a docker-compose .env file)
+
+Required keys (same names across all three sources):
+    DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SSLMODE (optional)
 """
 import os
 from contextlib import contextmanager
@@ -18,13 +24,40 @@ from sqlalchemy.orm import sessionmaker
 load_dotenv()  # populates os.environ from .env if present; no-op if missing
 
 
+def _get_setting(key: str, default: str | None = None) -> str | None:
+    """
+    Look up a config value, preferring real environment variables /
+    .env (already loaded into os.environ above), and falling back to
+    Streamlit's st.secrets if running on Streamlit Community Cloud.
+
+    os.environ is checked first so local dev and Docker/AWS deployments
+    (which set real env vars) are unaffected by this change — the
+    st.secrets path only activates when nothing was found in the
+    environment, which is exactly the Streamlit Cloud scenario.
+    """
+    value = os.environ.get(key)
+    if value:
+        return value
+
+    try:
+        import streamlit as st
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        # Not running inside Streamlit, or st.secrets not configured —
+        # fall through to the default.
+        pass
+
+    return default
+
+
 def _build_connection_url() -> str:
-    host     = os.environ.get("DB_HOST", "localhost")
-    port     = os.environ.get("DB_PORT", "5432")
-    name     = os.environ.get("DB_NAME", "retail_forecast")
-    user     = os.environ.get("DB_USER", "postgres")
-    password = os.environ.get("DB_PASSWORD", "postgres")
-    sslmode  = os.environ.get("DB_SSLMODE")  # set to "require" for RDS
+    host     = _get_setting("DB_HOST", "localhost")
+    port     = _get_setting("DB_PORT", "5432")
+    name     = _get_setting("DB_NAME", "retail_forecast")
+    user     = _get_setting("DB_USER", "postgres")
+    password = _get_setting("DB_PASSWORD", "postgres")
+    sslmode  = _get_setting("DB_SSLMODE")  # set to "require" for RDS / Neon
 
     url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{name}"
     if sslmode:
