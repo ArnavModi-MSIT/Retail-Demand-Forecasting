@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from src.capacity import apply_demo_cap
 
 from src.pipeline import (
     detect_columns,
@@ -169,6 +170,20 @@ def render_upload():
         # Dataset stats (always visible)
         st.subheader("📊 Dataset Overview")
         df_mapped = apply_column_mapping(df_raw.copy(), mapping)
+
+        # Demo capacity guard — no-op unless MAX_DEMO_ROWS is set (e.g. in production)
+        df_mapped, cap_notice = apply_demo_cap(df_mapped)
+        if cap_notice:
+            st.warning(
+                f"⚠️ **Demo capacity limit applied.** Dataset has "
+                f"{cap_notice['original_rows']:,} rows — sampled down to "
+                f"{cap_notice['sampled_rows']:,} rows ({cap_notice['detail']}) "
+                f"for live demo performance. The full pipeline has been "
+                f"benchmarked locally on datasets up to 1M+ rows — see the README "
+                f"for details.",
+                icon="⚠️",
+            )
+            
         c1, c2, c3, c4 = st.columns(4)
         _dates = pd.to_datetime(df_mapped["date"])
         c1.metric("Rows", f"{len(df_raw):,}")
