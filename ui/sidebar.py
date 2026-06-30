@@ -17,10 +17,14 @@ def render_sidebar():
 
         model_choice = st.selectbox(
             "Algorithm",
-            ["XGBoost", "LightGBM", "Random Forest"],
+            ["LightGBM", "XGBoost", "Random Forest"],
+            index=0,  # LightGBM default — fastest on constrained Cloud compute.
+                      # XGBoost's RandomizedSearchCV is CPU-heavy and noticeably
+                      # slower on Streamlit Community Cloud's shared/throttled
+                      # vCPUs vs local dev. Still available if selected manually.
             help=(
-                "XGBoost: best accuracy\n"
-                "LightGBM: faster\n"
+                "LightGBM: fastest, recommended for this live demo\n"
+                "XGBoost: best accuracy, slower hyperparameter search\n"
                 "Random Forest: most interpretable"
             ),
         )
