@@ -25,53 +25,84 @@ def save_run(
     service_level: float,
     lead_time: int,
     test_days: int,
+    session_id: str | None = None,
 ) -> str:
-    """Insert a new run record. Returns the generated run_id (str)."""
+    """
+    Insert a new run record. Returns the generated run_id (str).
+
+    session_id scopes this run to a browser session — used to prevent
+    different visitors on the shared public demo from seeing each
+    other's uploaded data. Pass None to leave a run unscoped (it simply
+    won't show up in anyone's "Load Previous Run" list).
+    """
     run_id = str(uuid.uuid4())
     with get_session() as session:
         session.execute(
             text("""
                 INSERT INTO runs (
                     run_id, dataset_name, n_rows, n_stores, n_depts,
-                    model_choice, horizon_days, service_level, lead_time, test_days
+                    model_choice, horizon_days, service_level, lead_time, test_days,
+                    session_id
                 ) VALUES (
                     :run_id, :dataset_name, :n_rows, :n_stores, :n_depts,
-                    :model_choice, :horizon_days, :service_level, :lead_time, :test_days
+                    :model_choice, :horizon_days, :service_level, :lead_time, :test_days,
+                    :session_id
                 )
             """),
             dict(
                 run_id=run_id, dataset_name=dataset_name, n_rows=n_rows,
                 n_stores=n_stores, n_depts=n_depts, model_choice=model_choice,
                 horizon_days=horizon_days, service_level=service_level,
-                lead_time=lead_time, test_days=test_days,
+                lead_time=lead_time, test_days=test_days, session_id=session_id,
             ),
         )
     return run_id
 
 
-def list_runs(limit: int = 20) -> pd.DataFrame:
-    """Return the most recent runs, newest first."""
+def list_runs(limit: int = 20, session_id: str | None = None) -> pd.DataFrame:
+    """
+    Return the most recent runs, newest first.
+
+    If session_id is provided, only returns runs created by that session —
+    this is the privacy boundary on the shared public demo. If session_id
+    is None, returns nothing (fail closed, never accidentally expose
+    everyone's data).
+    """
+    if session_id is None:
+        return pd.DataFrame()
+
     with get_session() as session:
         result = session.execute(
             text("""
                 SELECT run_id, created_at, dataset_name, n_rows, n_stores,
                        model_choice, horizon_days, service_level, lead_time
                 FROM runs
+                WHERE session_id = :session_id
                 ORDER BY created_at DESC
                 LIMIT :limit
             """),
-            dict(limit=limit),
+            dict(limit=limit, session_id=session_id),
         )
         rows = result.mappings().all()
     return pd.DataFrame(rows)
 
 
-def get_run(run_id: str) -> dict | None:
-    """Return a single run's config, or None if not found."""
+def get_run(run_id: str, session_id: str | None = None) -> dict | None:
+    """
+    Return a single run's config, or None if not found / not owned by
+    this session.
+
+    session_id is enforced here too — even if someone guesses or
+    obtains a run_id (e.g. via browser history), they can't load a run
+    that doesn't belong to their session.
+    """
+    if session_id is None:
+        return None
+
     with get_session() as session:
         result = session.execute(
-            text("SELECT * FROM runs WHERE run_id = :run_id"),
-            dict(run_id=run_id),
+            text("SELECT * FROM runs WHERE run_id = :run_id AND session_id = :session_id"),
+            dict(run_id=run_id, session_id=session_id),
         )
         row = result.mappings().first()
     return dict(row) if row else None

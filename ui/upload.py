@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from src.capacity import apply_demo_cap
+from src.session_helper import get_session_id
 
 from src.pipeline import (
     detect_columns,
@@ -17,7 +18,7 @@ def _render_load_previous_run():
     if not check_connection():
         return  # silently skip — DB not reachable, don't block the upload flow
 
-    runs_df = list_runs(limit=20)
+    runs_df = list_runs(limit=20, session_id=get_session_id())
     if runs_df.empty:
         return
 
@@ -47,7 +48,7 @@ def _render_load_previous_run():
             run_id = runs_df.iloc[idx]["run_id"]
 
             if st.button("📂 Load this run", width="stretch"):
-                run_meta     = get_run(run_id)
+                run_meta = get_run(run_id, session_id=get_session_id())
                 results_df   = get_model_metrics(run_id)
                 future_df    = get_forecasts(run_id)
                 inventory_df = get_inventory(run_id)

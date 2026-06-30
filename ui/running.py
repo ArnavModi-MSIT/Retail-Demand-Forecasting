@@ -4,6 +4,7 @@ import traceback
 import pandas as pd
 
 import streamlit as st
+from src.session_helper import get_session_id
 
 from src.pipeline import (
     engineer_features,
@@ -118,6 +119,7 @@ def render_running(config):
                     service_level=service_level,
                     lead_time=lead_time,
                     test_days=test_days,
+                    session_id=get_session_id(),
                 )
                 save_model_metrics(run_id, train_result["results_df"])
                 save_forecasts(run_id, future_df)

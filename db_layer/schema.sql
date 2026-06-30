@@ -19,8 +19,15 @@ CREATE TABLE IF NOT EXISTS runs (
     horizon_days  INTEGER NOT NULL,
     service_level NUMERIC NOT NULL,
     lead_time     INTEGER NOT NULL,
-    test_days     INTEGER NOT NULL
+    test_days     INTEGER NOT NULL,
+    -- Session-scoped isolation for the public demo: each browser session
+    -- gets a random ID, and only sees its own past runs. Not real auth —
+    -- just prevents strangers from seeing each other's uploaded data on a
+    -- shared public deployment.
+    session_id    TEXT
 );
+
+CREATE INDEX IF NOT EXISTS idx_runs_session ON runs(session_id);
 
 -- ── model_metrics ─────────────────────────────────────────────────────────
 -- Test-period model quality. One row per model evaluated in a run
