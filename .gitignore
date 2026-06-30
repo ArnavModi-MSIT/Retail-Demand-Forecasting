@@ -1,0 +1,45 @@
+/dataset
+/.venv
+/data
+/docs
+docs
+__pycache__
+logs
+tests
+.env
+env
+
+# Environment & secrets
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Data files (don't commit datasets)
+*.csv
+master_dataset.csv
+test_small.csv
+
+# Logs
+logs/
+*.log
+
+# Streamlit
+.streamlit/
+
+# Docker
+# (docker-compose.yml and Dockerfile SHOULD be committed — don't ignore these)
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+/models
