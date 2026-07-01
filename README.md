@@ -1,8 +1,66 @@
 # Retail Demand Forecasting & Inventory Optimization
 
-An end-to-end retail demand forecasting and inventory optimization application — from raw CSV upload through feature engineering, model training, recursive multi-day forecasting, SHAP explainability, and inventory recommendations, backed by a Postgres persistence layer.
+Retail Demand Forecasting & Inventory Optimization is an end-to-end machine learning application that predicts product demand, recommends reorder quantities, and generates inventory risk insights from uploaded retail sales data. Users upload a CSV, train a forecasting model, compare its performance against a naive baseline, interpret predictions with SHAP, and export an executive report.
 
 **Live demo:** https://retail-demand-forecasting-a.streamlit.app/
+
+---
+
+## Results
+
+<!--
+Fill this in with real numbers from an actual run on your sample/demo
+dataset before publishing. Do not leave placeholder values in the
+published README.
+-->
+
+| Metric | Value |
+|---|---|
+| Selected model | LightGBM |
+| MAPE | *fill in from a real run* |
+| Baseline MAPE (naive 7-day) | *fill in from a real run* |
+| Improvement over baseline | *fill in from a real run* |
+| Forecast horizon | 28 days |
+
+## Highlights
+
+- 28-day recursive multi-day forecasting, rewritten from an O(n²) to an O(1) per-step computation — reduced forecast runtime from approximately 40 minutes to approximately 12 seconds at scale
+- SHAP-based feature importance and per-feature explanations
+- Segmented error analysis (by store, weekday/weekend, demand tier) and residual diagnostics, not just a single accuracy number
+- Inventory risk classification via coefficient of variation, rather than a constant service-level assumption
+- Session-scoped Postgres persistence with best-effort writes that never block the pipeline
+- 49 automated tests, run on every push via GitHub Actions
+
+## Business Impact
+
+- Reduce stockouts through per-SKU safety stock and reorder point recommendations
+- Reduce excess inventory by right-sizing stock to actual demand volatility, not a flat assumption
+- Forecast demand up to 56 days ahead to support purchasing and staffing decisions
+- Identify high-risk SKUs before a stockout occurs, using volatility-based risk classification
+- Support replenishment decisions with an exportable executive report
+
+## Screenshots
+
+<!--
+Add 4 screenshots from the live app before publishing:
+  1. Forecast tab  — screenshots/forecast.png
+  2. Inventory tab — screenshots/inventory.png
+  3. Explainability tab (SHAP + error analysis) — screenshots/explainability.png
+  4. Model tab (metrics + residual plots) — screenshots/model.png
+Then replace this comment with:
+  ![Forecast](screenshots/forecast.png)
+  ![Inventory](screenshots/inventory.png)
+  ![Explainability](screenshots/explainability.png)
+  ![Model Performance](screenshots/model.png)
+-->
+
+*Screenshots to be added — see the live demo link above in the meantime.*
+
+## Tech Stack
+
+**Core:** Python, LightGBM, PostgreSQL, Streamlit, Docker, SHAP
+
+**Also used:** XGBoost, Random Forest, Plotly, NumPy, pandas, SQLAlchemy, pytest, GitHub Actions
 
 ---
 
@@ -12,62 +70,44 @@ Retail businesses need to answer two operational questions from historical sales
 
 The application is designed as a public Streamlit demo, but architected with production concerns in mind: a normalized Postgres schema, session-scoped multi-tenant data isolation, best-effort persistence that never blocks the core pipeline, and a Dockerized deployment using a multi-stage build and a non-root user.
 
----
-
 ## Architecture
 
 ```
 CSV Upload
     │
     ▼
-Column Detection & Mapping  (dataset.py — handles arbitrary column names/aliases)
+Column Detection & Mapping   (handles arbitrary column names/aliases)
     │
     ▼
-Data Validation             (dataset.py — blocking errors vs. warnings)
+Data Validation              (blocking errors vs. warnings)
     │
     ▼
-Demo Capacity Guard         (capacity.py — time-series-safe row sampling for shared demo)
+Demo Capacity Guard          (time-series-safe row sampling for shared demo)
     │
     ▼
-Feature Engineering         (features.py, features_lag.py, features_calendar.py, features_retail.py)
+Feature Engineering          (lag, rolling, calendar, retail covariates)
     │
     ▼
-Train/Test Split            (splitter.py — time-based split, no leakage)
+Train/Test Split             (time-based split, no leakage)
     │
     ▼
-Model Training               (models.py, train.py — XGBoost / LightGBM / Random Forest)
+Model Training                (XGBoost / LightGBM / Random Forest)
     │
     ▼
-Evaluation & SHAP            (evaluate.py — MAE / RMSE / MAPE + explainability)
+Evaluation & SHAP              (MAE / RMSE / MAPE + explainability)
     │
     ▼
-Recursive Future Forecast    (future_forecast.py — O(1) per-step buffer computation)
+Recursive Future Forecast       (O(1) per-step buffer computation)
     │
     ▼
-Inventory Optimization       (inventory.py — safety stock, reorder point, CV-based risk)
+Inventory Optimization           (safety stock, reorder point, CV-based risk)
     │
     ▼
-Executive Summary & Export   (reporting.py — KPI rollup, Excel export)
+Executive Summary & Export        (KPI rollup, Excel export)
     │
     ▼
-Postgres Persistence         (db_layer/ — best-effort, session-scoped, never blocks pipeline)
+Postgres Persistence               (best-effort, session-scoped)
 ```
-
-`pipeline.py` is a thin orchestrator that re-exports every module's public functions so the app can import from a single place.
-
----
-
-## Tech Stack
-
-| Layer | Tools |
-|---|---|
-| ML / Data | XGBoost, LightGBM, Random Forest, SHAP, pandas, NumPy, scikit-learn |
-| Application | Streamlit, Plotly |
-| Persistence | SQLAlchemy, PostgreSQL (Neon serverless in production) |
-| Infrastructure | Docker (multi-stage build), Docker Compose |
-| Testing | pytest |
-
----
 
 ## Key Features
 
@@ -78,7 +118,7 @@ Upload any retail sales CSV — the app detects `date`/`sales` and a wide range 
 Lag features (1/7/14/28 days), rolling mean/std (7/14/30 days), cyclical calendar encoding, price/promo/competition covariates — all derived strictly from `t-1` or earlier.
 
 **Multi-model training**
-Choice of XGBoost (with `RandomizedSearchCV` + `TimeSeriesSplit` hyperparameter search), LightGBM (fast defaults, used for the live demo), or Random Forest — evaluated against a naive 7-day baseline.
+Choice of XGBoost (with `RandomizedSearchCV` + `TimeSeriesSplit` hyperparameter search), LightGBM (fast defaults, used for the live demo), or Random Forest — evaluated against a naive 7-day baseline. LightGBM was chosen as the default for the deployed application specifically because it trains significantly faster than XGBoost's hyperparameter search on the memory-constrained free-tier instance, at comparable accuracy.
 
 **Recursive multi-day forecasting, optimized for speed**
 Forecasting 28+ days ahead recursively (each day's prediction feeds the next day's lag features) was originally an O(n²) operation, re-running full feature engineering on a growing history at every step. It has been rewritten to compute lag/rolling features directly from a NumPy buffer in O(1) per step, reducing forecast runtime from approximately 40 minutes to approximately 12 seconds at scale.
@@ -86,73 +126,40 @@ Forecasting 28+ days ahead recursively (each day's prediction feeds the next day
 **SHAP explainability**
 Feature importance via SHAP `TreeExplainer`, with a graceful fallback to native `feature_importances_` if SHAP fails on a given model.
 
+**Segmented error analysis and residual diagnostics**
+Test-period error is broken down by store, weekday/weekend, and demand tier, and by residual scatter/distribution plots — not just a single aggregate accuracy metric. This surfaces where and why the model is wrong, such as forecast error scaling with demand volume, which directly informs the volatility-based inventory risk design below.
+
 **Inventory optimization with per-SKU risk classification**
-Safety stock and reorder points computed from lead-time demand and its standard deviation (z-score scaled by service level). Risk level is classified by **coefficient of variation** (std/mean) on open-trading days only, rather than a constant service-level-derived probability — this means SKUs get genuinely differentiated risk levels instead of all showing identical stockout probability.
+Safety stock and reorder points are computed from lead-time demand and its standard deviation, scaled by a service-level z-score. Risk level is classified by coefficient of variation (standard deviation divided by mean demand) on open-trading days only, rather than a constant service-level-derived probability — this means SKUs get genuinely differentiated risk levels instead of all showing an identical stockout probability. The full formulas are documented in-app in the Inventory tab.
 
 **Postgres persistence, safely scoped for a public demo**
 - Every pipeline run is saved (forecasts, model metrics, inventory recommendations) under a random per-browser-session ID
 - "Load Previous Run" only ever shows runs from the same session — no cross-user data leakage on the shared public deployment
-- All DB writes are best-effort: if Postgres is unreachable, the pipeline still completes and the user sees their results; only persistence is skipped
-- Actuals can later be uploaded and joined against past forecasts (`get_forecast_accuracy`) using window functions (`AVG() OVER (ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)`, `RANK()`) to compute rolling forecast-error trends per store/dept, computed in Postgres rather than pandas
+- All database writes are best-effort: if Postgres is unreachable, the pipeline still completes and the user sees their results; only persistence is skipped
+- Actuals can later be uploaded and joined against past forecasts using window functions (`AVG() OVER (ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)`, `RANK()`) to compute rolling forecast-error trends per store/dept, computed in Postgres rather than pandas
 
 **Demo capacity guard**
-On the memory-constrained free-tier deployment, oversized uploads are sampled down via `MAX_DEMO_ROWS` — never by randomly dropping rows (which would corrupt lag/rolling features), but by keeping whole stores' history intact or the most recent contiguous date window.
+On the memory-constrained free-tier deployment, oversized uploads are sampled down via `MAX_DEMO_ROWS` — never by randomly dropping rows, which would corrupt lag/rolling features, but by keeping whole stores' history intact or the most recent contiguous date window.
 
-**Excel + CSV export**
+**Excel and CSV export**
 A formatted, color-coded multi-sheet Excel workbook (Executive Summary, Forecast Results, Inventory Recommendations, Model Performance, Feature Importance, Future Forecast) plus individual CSV downloads.
-
----
 
 ## Project Structure
 
 ```
 .
-├── app.py                      # Streamlit entrypoint
-├── ui/
-│   ├── sidebar.py               # Configuration controls
-│   ├── upload.py                 # CSV upload stage
-│   ├── running.py                 # Pipeline execution + progress
-│   ├── results.py                  # Results routing (retrain vs. reforecast detection)
-│   └── tabs/
-│       ├── forecast.py              # Forecast chart + actual-vs-predicted
-│       ├── inventory.py              # Risk KPI cards + color-coded table
-│       ├── explainability.py          # SHAP feature importance
-│       ├── model.py                    # Model performance metrics
-│       └── download.py                  # Excel / CSV export
-├── src/
-│   ├── dataset.py                # Column detection, mapping, validation
-│   ├── capacity.py                # Demo row-cap sampling
-│   ├── features.py                 # Feature engineering orchestrator
-│   ├── features_lag.py              # Lag / rolling features
-│   ├── features_calendar.py          # Calendar / cyclical / event features
-│   ├── features_retail.py             # Price / promo / competition features
-│   ├── preprocessing.py                # Label encoding, feature column selection
-│   ├── splitter.py                      # Time-based train/test split
-│   ├── models.py                         # Model fitting, hyperparameter search
-│   ├── train.py                           # Training orchestrator
-│   ├── evaluate.py                         # Metrics + SHAP
-│   ├── future_forecast.py                   # Recursive O(1) multi-day forecast
-│   ├── inventory.py                           # Safety stock, reorder point, risk classification
-│   ├── reporting.py                             # Executive summary, Excel export
-│   ├── session_helper.py                         # Per-browser-session ID for demo isolation
-│   └── pipeline.py                                # Thin re-export orchestrator
-├── db_layer/
-│   ├── connection.py               # SQLAlchemy engine, env/secrets-based config
-│   ├── repository.py                # All SQL — reads/writes, session-scoped
-│   └── schema.sql                     # Postgres schema (runs, forecasts, inventory, actuals)
-├── tests/
-│   ├── test_dataset.py
-│   ├── test_evaluate.py
-│   ├── test_inventory.py
-│   └── test_future_forecast.py
-├── Dockerfile                       # Multi-stage build, non-root user
-├── docker-compose.yml                # App + Postgres for local full-stack dev
-├── requirements.txt
-├── pytest.ini
-└── .streamlit/config.toml            # Theme config
+├── app.py                # Streamlit entrypoint
+├── ui/                   # Sidebar, upload/run/results flow, and per-tab views
+├── src/                  # Feature engineering, training, forecasting, inventory logic
+├── db_layer/             # Postgres connection, repository, schema
+├── tests/                # 49 pytest tests
+├── .github/workflows/    # CI — runs the test suite on every push
+├── Dockerfile
+├── docker-compose.yml
+└── requirements.txt
 ```
 
----
+See individual module docstrings for details on any given file.
 
 ## Getting Started
 
@@ -171,13 +178,11 @@ The application runs fully without a database connection. Persistence is best-ef
 docker-compose up --build
 ```
 
-Requires a `.env` file in the repo root with at least `DB_PASSWORD` set (used by `docker-compose.yml`). Visit `http://localhost:8501`.
+Requires a `.env` file in the repo root with at least `DB_PASSWORD` set. Visit `http://localhost:8501`.
 
 ### Configuration
 
 Database credentials are read from environment variables (local/Docker) or `st.secrets` (Streamlit Community Cloud) — see `db_layer/connection.py`. Required keys: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, and optionally `DB_SSLMODE` (set to `require` for managed Postgres like Neon or RDS).
-
----
 
 ## Testing
 
@@ -186,23 +191,15 @@ pip install pytest --break-system-packages
 pytest tests/ -v
 ```
 
-29 tests covering:
-- Column detection/aliasing and data validation (`test_dataset.py`)
-- Forecast evaluation metrics, including zero-actual edge cases (`test_evaluate.py`)
-- Inventory risk classification, safety stock scaling, and reorder point math (`test_inventory.py`)
-- The O(1) recursive forecast buffer computation, verified against a from-scratch reference implementation (`test_future_forecast.py`)
+49 tests covering data validation and column detection, preprocessing and categorical encoding, forecast evaluation metrics, inventory risk classification and safety stock math, segmented error analysis, and the O(1) recursive forecast buffer — verified against a from-scratch reference implementation. A GitHub Actions workflow runs the full suite on every push to `main`.
 
-Writing tests for the recursive forecast buffer surfaced two defects that were subsequently fixed in `future_forecast.py`: rolling mean and standard deviation were computed one day stale relative to the training-time feature definitions, and standard deviation used population variance (`ddof=0`) rather than sample variance (`ddof=1`, matching the training-time convention). Both issues affected live forecast quality and downstream inventory risk scoring prior to the fix.
-
----
+Writing tests for the recursive forecast buffer surfaced two real defects, subsequently fixed: rolling mean and standard deviation were computed one day stale relative to the training-time feature definitions, and standard deviation used population variance rather than sample variance, matching the training-time convention. Both issues affected live forecast quality and downstream inventory risk scoring prior to the fix.
 
 ## Known Limitations (by design, for a public demo)
 
 - Session isolation via a random per-browser-session ID is a privacy boundary, not authentication — acceptable for a public demo, not a substitute for real multi-tenant auth.
-- The `MAX_DEMO_ROWS` capacity guard trades off dataset completeness for staying within free-tier memory limits; local/full-scale runs are uncapped.
-- No scheduling/orchestration layer (e.g. Airflow) — the pipeline runs synchronously on user interaction, not as a recurring batch job, so an orchestrator isn't the right fit for this deployment model.
-
----
+- The `MAX_DEMO_ROWS` capacity guard trades off dataset completeness for staying within free-tier memory limits; local and full-scale runs are uncapped.
+- No scheduling or orchestration layer (such as Airflow): the pipeline runs synchronously on user interaction rather than as a recurring batch job, so an orchestrator is not the right fit for this deployment model.
 
 ## Author
 
