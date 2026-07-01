@@ -166,8 +166,9 @@ def render_running(config):
         # Save full traceback
         logging.error(traceback.format_exc())
 
-        st.exception(e)
         st.error("❌ Forecast generation failed.")
+        with st.expander("Technical details"):
+            st.code(str(e))
         st.info("""
 Possible reasons:
 
