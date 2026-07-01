@@ -4,7 +4,6 @@ import traceback
 import pandas as pd
 
 import streamlit as st
-from src.session_helper import get_session_id
 
 from src.pipeline import (
     engineer_features,
@@ -21,6 +20,7 @@ from db_layer.repository import (
     save_inventory,
 )
 from db_layer.connection import check_connection
+from src.session_helper import get_session_id
 
 
 def render_running(config):

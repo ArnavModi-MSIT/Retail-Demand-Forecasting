@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from src.capacity import apply_demo_cap
-from src.session_helper import get_session_id
 
 from src.pipeline import (
     detect_columns,
@@ -11,6 +10,7 @@ from src.pipeline import (
 )
 from db_layer.repository import list_runs, get_run, get_model_metrics, get_forecasts, get_inventory
 from db_layer.connection import check_connection
+from src.session_helper import get_session_id
 
 
 def _render_load_previous_run():
@@ -22,7 +22,7 @@ def _render_load_previous_run():
     if runs_df.empty:
         return
 
-    with st.expander("🕘 Load a Previous Run", expanded=False):
+    with st.expander("Load a Previous Run", expanded=False):
         st.caption(
             "Loaded runs are view-only — forecast/inventory settings won't "
             "update live since the trained model isn't reloaded. "
@@ -47,8 +47,8 @@ def _render_load_previous_run():
             idx = labels.index(choice)
             run_id = runs_df.iloc[idx]["run_id"]
 
-            if st.button("📂 Load this run", width="stretch"):
-                run_meta = get_run(run_id, session_id=get_session_id())
+            if st.button("Load this run", width="stretch"):
+                run_meta     = get_run(run_id, session_id=get_session_id())
                 results_df   = get_model_metrics(run_id)
                 future_df    = get_forecasts(run_id)
                 inventory_df = get_inventory(run_id)
@@ -126,7 +126,7 @@ def _render_load_previous_run():
 
 
 def render_upload():
-    st.markdown("### 📤 Upload your sales data")
+    st.markdown("### Upload your sales data")
     st.markdown("*CSV file with `date` and `sales` columns. Other columns are auto-detected.*")
 
     _render_load_previous_run()
@@ -159,7 +159,7 @@ def render_upload():
         # Manual override for unmapped columns — must run before stats/chart
         # below so they reflect any correction, since Streamlit reruns
         # top-to-bottom on every widget interaction.
-        with st.expander("🔧 Adjust Column Mapping (if needed)"):
+        with st.expander("Adjust Column Mapping (if needed)"):
             st.caption("Override auto-detection if any column was mapped incorrectly.")
             all_cols = ["(none)"] + list(df_raw.columns)
             for canon in ["store_id", "dept_id", "sell_price", "event_type_1"]:
@@ -169,7 +169,7 @@ def render_upload():
                 mapping[canon] = None if chosen == "(none)" else chosen
 
         # Dataset stats (always visible)
-        st.subheader("📊 Dataset Overview")
+        st.subheader("Dataset Overview")
         df_mapped = apply_column_mapping(df_raw.copy(), mapping)
 
         # Demo capacity guard — no-op unless MAX_DEMO_ROWS is set (e.g. in production)
@@ -222,7 +222,7 @@ def render_upload():
         st.plotly_chart(fig, width="stretch")
 
         # Preview (collapsible)
-        with st.expander("📋 Preview Data (first 5 rows)"):
+        with st.expander("Preview Data — first 5 rows"):
             st.dataframe(df_raw.head(5), width="stretch")
 
         # Validation
@@ -238,7 +238,7 @@ def render_upload():
 
         st.divider()
 
-        if st.button("🚀 Run Forecasting Pipeline", type="primary", width="stretch"):
+        if st.button("Run Forecasting Pipeline", type="primary", width="stretch"):
             st.session_state["df_mapped"] = df_mapped
             st.session_state["mapping"]   = mapping
             st.session_state["stage"]     = "running"
@@ -248,7 +248,7 @@ def render_upload():
         # No file uploaded yet
         st.divider()
 
-        st.subheader("📋 How it works")
+        st.subheader("How it works")
         col_a, col_b, col_c, col_d = st.columns(4)
         col_a.markdown("**1️⃣ Upload**\nYour sales CSV")
         col_b.markdown("**2️⃣ Validate**\nCheck for errors")
@@ -260,14 +260,14 @@ def render_upload():
         col_left, col_right = st.columns(2)
 
         with col_left:
-            st.subheader("✅ Required Columns")
+            st.subheader("Required Columns")
             st.markdown("""
 - **`date`** — YYYY-MM-DD format
 - **`sales`** — numeric (units sold)
             """)
 
         with col_right:
-            st.subheader("➕ Optional Columns")
+            st.subheader("Optional Columns")
             st.markdown("""
 - `store_id` — store identifier
 - `dept_id` — department/category
@@ -277,23 +277,59 @@ def render_upload():
 
         st.divider()
 
-        st.subheader("📝 Sample Data")
-        sample = pd.DataFrame({
-            "date":     ["2023-01-01", "2023-01-02", "2023-01-03"],
-            "store_id": ["CA_1", "CA_1", "CA_1"],
-            "dept_id":  ["FOODS", "FOODS", "FOODS"],
-            "sales":    [120, 95, 138],
-            "sell_price": [2.50, 2.50, 2.75],
-        })
-        st.dataframe(sample, width="stretch", hide_index=True)
+        st.subheader("Try the Demo")
+        st.caption(
+            "Load a ready-to-use sample dataset — 2 stores, 2 years of daily retail sales data. "
+            "Click **Run with sample data** to see the full pipeline in action without uploading anything."
+        )
 
-        col_dl, col_space = st.columns([1, 4])
+        import numpy as np
+        rng = np.random.default_rng(42)
+        dates = pd.date_range("2022-01-01", "2023-12-31", freq="D")
+        sample_rows = []
+        for store in [1, 2]:
+            base = 4000 if store == 1 else 5500
+            for i, d in enumerate(dates):
+                dow = d.dayofweek
+                if dow == 6:
+                    sales, open_flag, promo = 0, 0, 0
+                else:
+                    weekly = [1.1, 0.95, 0.9, 0.95, 1.1, 1.3, 0][dow]
+                    is_promo = rng.random() < 0.15
+                    sales = max(0, int(
+                        base * weekly * (1 + 0.0002 * i)
+                        * (1.2 if is_promo else 1.0)
+                        * rng.normal(1.0, 0.08)
+                    ))
+                    open_flag, promo = 1, int(is_promo)
+                sample_rows.append({
+                    "date": d.strftime("%Y-%m-%d"),
+                    "store_id": store,
+                    "sales": sales,
+                    "open": open_flag,
+                    "promo": promo,
+                    "school_holiday": int(d.month in [5, 6, 10, 12] and rng.random() < 0.3),
+                })
+        sample_df = pd.DataFrame(sample_rows)
+
+        st.dataframe(sample_df.head(5), width="stretch", hide_index=True)
+        st.caption(f"Full dataset: {len(sample_df):,} rows × {len(sample_df.columns)} columns — 2 stores, 2 years daily data")
+
+        col_run, col_dl = st.columns([2, 1])
+        with col_run:
+            if st.button("Run with sample data", type="primary", width="stretch"):
+                from src.pipeline import detect_columns, apply_column_mapping, validate_data
+                mapping = detect_columns(sample_df)
+                df_mapped = apply_column_mapping(sample_df.copy(), mapping)
+                st.session_state["df_mapped"] = df_mapped
+                st.session_state["uploaded_filename"] = "sample_retail_data.csv"
+                st.session_state["stage"] = "running"
+                st.rerun()
         with col_dl:
-            sample_csv = sample.to_csv(index=False).encode()
             st.download_button(
-                "⬇️ Download Sample",
-                sample_csv,
-                "sample_sales.csv",
+                "Download CSV",
+                sample_df.to_csv(index=False).encode(),
+                "sample_retail_data.csv",
                 "text/csv",
                 width="stretch",
             )

@@ -13,9 +13,9 @@ def render_explainability_tab(R):
 
     if shap_df is None or shap_df.empty or "mean_abs_shap" not in shap_df.columns:
         st.info(
-            "📂 SHAP analysis isn't available for a loaded run — "
+            "SHAP analysis isn't available for a loaded run — "
             "this view requires the original pipeline run.",
-            icon="📂",
+            icon="Info:",
         )
         return
 
@@ -58,7 +58,7 @@ def render_explainability_tab(R):
         width="stretch",
     )
 
-    with st.expander("📖 Feature Explanation"):
+    with st.expander("Feature Explanation"):
 
         st.markdown(
             """

@@ -2,26 +2,18 @@ import streamlit as st
 
 
 def render_sidebar():
-    """
-    Renders sidebar and returns all configuration values.
-    """
+    """Renders sidebar and returns all configuration values."""
 
     with st.sidebar:
 
-        st.title("⚙️ Configuration")
+        st.title("Configuration")
 
-        # ------------------------------
-        # Quick Settings
-        # ------------------------------
         st.subheader("Quick Settings")
 
         model_choice = st.selectbox(
             "Algorithm",
             ["LightGBM", "XGBoost", "Random Forest"],
-            index=0,  # LightGBM default — fastest on constrained Cloud compute.
-                      # XGBoost's RandomizedSearchCV is CPU-heavy and noticeably
-                      # slower on Streamlit Community Cloud's shared/throttled
-                      # vCPUs vs local dev. Still available if selected manually.
+            index=0,
             help=(
                 "LightGBM: fastest, recommended for this live demo\n"
                 "XGBoost: best accuracy, slower hyperparameter search\n"
@@ -44,10 +36,7 @@ def render_sidebar():
             help="Higher service level = more safety stock.",
         )
 
-        # ------------------------------
-        # Advanced Options
-        # ------------------------------
-        with st.expander("⚡ Advanced Options", expanded=False):
+        with st.expander("Advanced Options", expanded=False):
 
             test_days = st.selectbox(
                 "Test window (days)",
@@ -66,19 +55,21 @@ def render_sidebar():
 
         st.divider()
 
-        if st.button(
-            "🔄 Reset — upload new data",
-            width="stretch"
-        ):
+        if st.button("Reset — upload new data", width="stretch"):
+            # Preserve session_id — it's the privacy boundary that scopes
+            # this browser session's runs. Deleting it would generate a new
+            # ID and make all previously saved runs invisible.
+            preserved_session_id = st.session_state.get("session_id")
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
-
+            if preserved_session_id:
+                st.session_state["session_id"] = preserved_session_id
             st.rerun()
 
     return {
-        "model_choice": model_choice,
-        "horizon_days": horizon_days,
+        "model_choice":  model_choice,
+        "horizon_days":  horizon_days,
         "service_level": service_level,
-        "test_days": test_days,
-        "lead_time": lead_time,
+        "test_days":     test_days,
+        "lead_time":     lead_time,
     }

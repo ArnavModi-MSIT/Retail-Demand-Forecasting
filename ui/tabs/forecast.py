@@ -68,9 +68,9 @@ def render_forecast_tab(R):
     st.subheader("Actual vs Predicted (test period)")
     if preds.empty or "date" not in preds.columns:
         st.info(
-            "📂 Test-period detail isn't available for a loaded run — "
+            "Test-period detail isn't available for a loaded run — "
             "this view requires the original pipeline run.",
-            icon="📂",
+            icon="Info:",
         )
     else:
         if selected_store != "All stores" and "store_id" in preds.columns:

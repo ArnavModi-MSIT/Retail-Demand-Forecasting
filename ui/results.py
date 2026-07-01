@@ -74,9 +74,9 @@ def render_results(config: dict):
         # Loaded runs have no model/encoders/df_featured in memory —
         # skip config-change detection entirely and show a notice instead.
         st.info(
-            "📂 Viewing a previously saved run. Sidebar changes won't update "
+            "Viewing a previously saved run. Sidebar changes won't update "
             "this view — upload data and run the pipeline to forecast live.",
-            icon="📂",
+            icon="Info:",
         )
     else:
         # ── Detect config changes ─────────────────────────────────────────────
@@ -110,7 +110,7 @@ def render_results(config: dict):
     forecasting_metrics = R["forecasting_metrics"]
     business_metrics    = R["business_metrics"]
 
-    st.subheader("📊 Executive Summary")
+    st.subheader("Executive Summary")
     k1, k2, k3, k4, k5 = st.columns(5)
     k1.metric("Total Forecast Demand", f"{summary['total_demand']:,.0f} units")
     k2.metric("Avg Daily Demand",      f"{summary['average_daily_demand']:,.0f} units/day")
@@ -142,7 +142,7 @@ def render_results(config: dict):
 
     # ── Tabs ──────────────────────────────────────────────────────────────────
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📈 Forecast", "📦 Inventory", "🔍 Explainability", "🏆 Model", "⬇️ Download"
+        "Forecast", "Inventory", "Explainability", "Model", "Download"
     ])
 
     with tab1:

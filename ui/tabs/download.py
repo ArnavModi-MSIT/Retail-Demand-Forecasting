@@ -15,7 +15,7 @@ def render_download_tab(R):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("**📊 Excel Report**")
+        st.markdown("**Excel Report**")
         st.caption("All results in one formatted workbook")
         excel_bytes = export_excel(
             summary,
@@ -26,7 +26,7 @@ def render_download_tab(R):
             future_forecast_df=future,
         )
         st.download_button(
-            "⬇️ Download Excel (.xlsx)",
+            "Download Excel (.xlsx)",
             excel_bytes,
             "retail_forecast_report.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -36,7 +36,7 @@ def render_download_tab(R):
         )
 
     with col2:
-        st.markdown("**📄 CSV Downloads**")
+        st.markdown("**CSV Downloads**")
         st.caption("Raw data for further analysis")
 
     st.divider()
