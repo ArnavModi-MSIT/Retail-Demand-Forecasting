@@ -318,7 +318,6 @@ def render_upload():
         col_run, col_dl = st.columns([2, 1])
         with col_run:
             if st.button("Run with sample data", type="primary", width="stretch"):
-                from src.pipeline import detect_columns, apply_column_mapping, validate_data
                 mapping = detect_columns(sample_df)
                 df_mapped = apply_column_mapping(sample_df.copy(), mapping)
                 st.session_state["df_mapped"] = df_mapped
