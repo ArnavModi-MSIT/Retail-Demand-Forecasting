@@ -1,6 +1,16 @@
 import streamlit as st
 import plotly.graph_objects as go
 
+from src.error_analysis import compute_error_segments
+
+
+def _render_segment_table(title, caption, df):
+    if df is None or df.empty:
+        return
+    st.markdown(f"**{title}**")
+    st.caption(caption)
+    st.dataframe(df, width="stretch", hide_index=True)
+
 
 def render_explainability_tab(R):
 
@@ -31,6 +41,12 @@ def render_explainability_tab(R):
     shap_plot = (
         shap_df.head(top_n)
         .sort_values("mean_abs_shap")
+    )
+
+    top_feature = shap_plot.iloc[-1]["feature"]
+    st.caption(
+        f"**{top_feature}** is currently the most influential feature for this run — "
+        "see the feature category explanations below for what it represents."
     )
 
     fig = go.Figure(
@@ -98,4 +114,59 @@ Capture seasonality and weekly patterns.
 
 Measure price elasticity and promotional effects.
 """
+        )
+
+    # ── Error segmentation ─────────────────────────────────────────────────
+    st.divider()
+    st.subheader("Error Analysis")
+    st.caption(
+        "Test-period forecast error broken down by store, day type, and demand "
+        "tier — segments with fewer than 10 test-period rows are omitted as "
+        "too small to be reliable."
+    )
+
+    predictions_df = R.get("predictions_df")
+    df_featured = R.get("df_featured")
+    inventory_df = R.get("inventory_df")
+
+    if predictions_df is None or predictions_df.empty or "date" not in predictions_df.columns:
+        st.info(
+            "Error analysis isn't available for a loaded run — "
+            "this view requires the original pipeline run.",
+        )
+        return
+
+    segments = compute_error_segments(predictions_df, df_featured, inventory_df)
+
+    any_segment_shown = False
+    col1, col2 = st.columns(2)
+    with col1:
+        if not segments["by_store"].empty:
+            any_segment_shown = True
+            _render_segment_table(
+                "By Store",
+                "Stores with the highest average forecast error.",
+                segments["by_store"],
+            )
+    with col2:
+        if not segments["by_weekend"].empty:
+            any_segment_shown = True
+            _render_segment_table(
+                "Weekday vs. Weekend",
+                "Whether forecast error differs between weekdays and weekends.",
+                segments["by_weekend"],
+            )
+
+    if not segments["by_demand_tier"].empty:
+        any_segment_shown = True
+        _render_segment_table(
+            "High-Demand vs. Low-Demand SKUs",
+            "Whether the model is more accurate for high-volume or low-volume store/department combinations.",
+            segments["by_demand_tier"],
+        )
+
+    if not any_segment_shown:
+        st.info(
+            "Not enough test-period data to compute reliable error segments "
+            "for this run (each segment needs at least 10 rows).",
         )
