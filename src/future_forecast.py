@@ -54,14 +54,14 @@ def _compute_lag_rolling(sales_buf: np.ndarray) -> dict:
         features[f"lag_{lag}"] = float(sales_buf[-lag]) if n >= lag else 0.0
 
     for window in [7, 14, 30]:
-        if n >= window + 1:
-            features[f"rolling_mean_{window}"] = float(sales_buf[-(window + 1):-1].mean())
+        if n >= window:
+            features[f"rolling_mean_{window}"] = float(sales_buf[-window:].mean())
         else:
             features[f"rolling_mean_{window}"] = 0.0
 
     for window in [7, 30]:
-        if n >= window + 1:
-            features[f"rolling_std_{window}"] = float(sales_buf[-(window + 1):-1].std())
+        if n >= window:
+            features[f"rolling_std_{window}"] = float(sales_buf[-window:].std(ddof=1)) if window > 1 else 0.0
         else:
             features[f"rolling_std_{window}"] = 0.0
 
