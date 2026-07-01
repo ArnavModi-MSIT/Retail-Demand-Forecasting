@@ -44,9 +44,6 @@ published README.
   ![](screenshots/exp.png)
   ![Model Performance](screenshots/model.png)
   ![](screenshots/mod.png)
--->
-
-*Screenshots to be added — see the live demo link above in the meantime.*
 
 ## Tech Stack
 
