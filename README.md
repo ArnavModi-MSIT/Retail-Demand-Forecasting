@@ -38,18 +38,12 @@ published README.
 - Support replenishment decisions with an exportable executive report
 
 ## Screenshots
-
-<!--
-Add 4 screenshots from the live app before publishing:
-  1. Forecast tab  — screenshots/forecast.png
-  2. Inventory tab — screenshots/inventory.png
-  3. Explainability tab (SHAP + error analysis) — screenshots/explainability.png
-  4. Model tab (metrics + residual plots) — screenshots/model.png
-Then replace this comment with:
   ![Forecast](screenshots/forecast.png)
   ![Inventory](screenshots/inventory.png)
   ![Explainability](screenshots/explainability.png)
+  ![](screenshots/exp.png)
   ![Model Performance](screenshots/model.png)
+  ![](screenshots/mod.png)
 -->
 
 *Screenshots to be added — see the live demo link above in the meantime.*
