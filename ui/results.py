@@ -76,7 +76,6 @@ def render_results(config: dict):
         st.info(
             "Viewing a previously saved run. Sidebar changes won't update "
             "this view — upload data and run the pipeline to forecast live.",
-            icon="Info:",
         )
     else:
         # ── Detect config changes ─────────────────────────────────────────────

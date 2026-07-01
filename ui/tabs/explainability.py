@@ -15,7 +15,6 @@ def render_explainability_tab(R):
         st.info(
             "SHAP analysis isn't available for a loaded run — "
             "this view requires the original pipeline run.",
-            icon="Info:",
         )
         return
 

@@ -70,7 +70,6 @@ def render_forecast_tab(R):
         st.info(
             "Test-period detail isn't available for a loaded run — "
             "this view requires the original pipeline run.",
-            icon="Info:",
         )
     else:
         if selected_store != "All stores" and "store_id" in preds.columns:
